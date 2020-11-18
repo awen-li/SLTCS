@@ -1,10 +1,7 @@
 #!/usr/bin/python
 import sys
 import os
-import pandas as pd
-from lib.CnnClf import CnnClf
-from lib.LabelCtrl import LabelCtrl
-
+from lib.SlTcs import SlTcs
 
 
 def LoadData (FileName):
@@ -23,23 +20,9 @@ def main(argv):
         print ("data directory does not exist!!!!")
         sys.exit(2)
 
-    # loop to load trainning data and train
-    while (True):
-        CsvDirs = os.walk("CSVs/") 
-        for Path, Dirs, Csvs in CsvDirs:
-            print (Path)
-            for csv in Csvs:
-                CsvFile = os.path.join(Path, csv)
-                print(CsvFile)
+    SlSysten = SlTcs ()
+    SlSysten.Start ();
 
-        LC = LabelCtrl ()
-        LC.AddLabel ("youtube")
-        LC.WriteLabels ()
-
-        break
-    
-    
-   
 
 if __name__ == "__main__":
    main(sys.argv[1:])

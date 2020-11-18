@@ -118,6 +118,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    IpSet = GetUserIpSet ();
+
     if (File != "")
     {
         Split Sp (File, IsCsv);
@@ -130,8 +132,6 @@ int main(int argc, char *argv[])
         Help ();
         return 0;
     }
-
-    IpSet = GetUserIpSet ();
 
     int Ret = pthread_create(&Tid, NULL, F2CsvThread, NULL);
     assert (Ret == 0);
