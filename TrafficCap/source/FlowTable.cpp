@@ -16,7 +16,7 @@ VOID FlowTable::GetProcessId()
     Dir = opendir("/proc");
 	if (Dir == NULL)
 	{
-        printf ("opendir fail...\r\n");
+        //printf ("opendir fail...\r\n");
         return;
 	}
 
@@ -40,6 +40,7 @@ VOID FlowTable::GetProcessId()
             }
 
             CHAR* Result = fgets (Buffer, sizeof (Buffer), PFile);
+            fclose (PFile);
             if (Result == NULL)
             {
                 continue;
@@ -121,7 +122,7 @@ VOID FlowTable::LoadTcpInfo(map<DWORD, Flow*>& Inode2Flow)
     PFile = fopen ("/proc/net/tcp", "r");
     if (PFile == NULL)
     {
-        printf ("open tcp file fail...\r\n");
+        //printf ("open tcp file fail...\r\n");
         return;
     }
 
@@ -173,6 +174,8 @@ VOID FlowTable::LoadTcpInfo(map<DWORD, Flow*>& Inode2Flow)
   
         //printf ("\t%s(%X):%s(%X), %s(%X):%s(%X) - %s (%u)\r\n", SrcIp, SIp, SrcPort, SPort, DstIp, DIp, DstPort, DPort, INode, iNodeId);
     }
+
+    fclose (PFile);
 }
 
 DWORD FlowTable::UpdateFlowTable()

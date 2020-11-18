@@ -40,10 +40,11 @@ public:
         BYTE* Buffer = (BYTE* )malloc (16 * 1024);
         assert (Buffer != NULL);
 
-        ofstream CsvFile;
+        FILE* CsvFile;
         string FileName = "CSVs/" + to_string (time(NULL)) + ".csv";
-	    CsvFile.open(FileName, ios::app);
-
+	    CsvFile = fopen (FileName.c_str(), "w");
+        assert (CsvFile != NULL);
+        
         for (auto It = m_Flm->begin (); It != m_Flm->end (); It++)
         {
             Flow *F = *It;
@@ -61,14 +62,14 @@ public:
             /* flow name: src_srcport_dst_dst_port_protocol */
             snprintf ((char *)Buffer, BUF_LEN, "%.2X_%.2X_%.2X_%.2X_%.2X", 
                       F->m_SrcIp, F->m_SrcPort, F->m_DstIp, F->m_DstPort, F->m_ProtoType);
-            CsvFile<< Buffer << ',';
+            fprintf (CsvFile, "%s,", Buffer);
 
             string ProName = "None";
             if (m_Ft != NULL)
             {
                 ProName = m_Ft->GetFlowProc (F->m_SrcIp, F->m_DstIp, F->m_SrcPort, F->m_DstPort, F->m_ProtoType);
             }
-            CsvFile<< ProName << ',';
+            fprintf (CsvFile, "%s,", ProName.c_str());
 
             /* write packet data */
             for (auto pIt = F->m_PakcetData.begin (); pIt != F->m_PakcetData.end (); pIt++)
@@ -97,10 +98,10 @@ public:
                     offset++;
                 }
 
-                CsvFile<< Buffer<<",";
+                fprintf (CsvFile, "%s,", Buffer);
             }
 
-            CsvFile<<"\r\n";
+            fprintf (CsvFile, "\r\n");
 
             F->m_Fin = 1;
             F->DelPackets ();
@@ -117,7 +118,7 @@ public:
             cout<<"Dump "<<DumpNum <<" flows into "<<FileName<<"\r\n";
         }
 
-        CsvFile.close ();    
+        fclose(CsvFile);    
         return;
     }
 };

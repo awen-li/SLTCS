@@ -68,7 +68,7 @@ typedef unsigned int     BOOL;
 
 
 #define CAPTURE_NUM         (20)
-#define FORMAT_LEN          (512)
+#define FORMAT_LEN          (256)
 
 
 
