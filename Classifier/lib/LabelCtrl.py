@@ -37,8 +37,17 @@ class LabelCtrl():
     def AddLabel (self, Label):    
         ID = self.Labels.get (Label)
         if ID != None:
-            return
-        self.Labels[Label] = len (self.Labels) + 1
+            return ID
+        ID = len (self.Labels)
+        self.Labels[Label] = ID
+        return ID
+
+    def InsertLabel (self, Label, ID):
+        self.Labels[Label] = ID
+        return ID
+
+    def GetLabelNum (self):
+        return len (self.Labels)
         
             
        
