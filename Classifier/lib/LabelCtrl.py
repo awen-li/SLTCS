@@ -1,8 +1,13 @@
 #!/usr/bin/python
+##########################################################################
+# Author: Wen Li
+# Date:   11/19/2020
+# Description: flow label management
+##########################################################################
+
 import os
 import pandas as pd
 import csv
-
 
 LABEL_FILE = "labelctrl.csv"
 
@@ -44,14 +49,11 @@ class LabelCtrl():
         LabelFile.close()
 
     def AddLabel (self, Label, Type=LV1_LABEL):    
-        LabelAttr = self.Labels.get (Label)
-        if LabelAttr != None:
-            return LabelAttr.Id
+        LbAttr = self.Labels.get (Label)
+        if LbAttr != None:
+            return LbAttr.Id
+        
         ID = len (self.Labels)
-        self.Labels[Label] = LabelAttr (Label, ID, Type)
-        return ID
-
-    def InsertLabel (self, Label, ID, Type=LV1_LABEL):
         self.Labels[Label] = LabelAttr (Label, ID, Type)
         return ID
 

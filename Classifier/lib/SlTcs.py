@@ -1,4 +1,10 @@
 #!/usr/bin/python
+##########################################################################
+# Author: Wen Li
+# Date:   11/18/2020
+# Description: self-learning traffic classification system entry
+##########################################################################
+
 import os
 import numpy as np
 import pandas as pd
@@ -6,8 +12,11 @@ import csv
 from lib.CnnClf import CnnClf
 from lib.LabelCtrl import LabelCtrl
 from lib.Cluster import LshCluster
+from lib.ChExtract import ChExtract
+
 
 CNN_MODEL = "result/CnnModel"
+FLOWLABEL = "data/flow2label.csv"
 
 class SlTcs():
     def __init__(self):
@@ -33,7 +42,7 @@ class SlTcs():
             self.Flows.append (flow)
         return
 
-    def LoadFlow2Labels (self, File = "data/flow2label.csv"):
+    def LoadFlow2Labels (self, File = FLOWLABEL):
         if not os.path.exists (File):
             return None
         DF = pd.read_csv(File, header=0)
@@ -48,7 +57,6 @@ class SlTcs():
             flowLabel = self.Flow2Label.get (flow)
             if flowLabel is not None:
                 Label = flowLabel
-                self.LCtl.InsertLabel (app, Label)
             else: 
                 Label = self.LCtl.AddLabel (app)
                 
@@ -72,12 +80,10 @@ class SlTcs():
     def Reshape (self):
         TrainSet    = np.array(self.Packets)
         TrainLabels = np.array(self.Labels).flatten()
-        print (1, TrainSet.shape, TrainLabels.shape)
-            
+
         TrainSet = TrainSet/255
         TrainSet = TrainSet.astype('float32')
         TrainSet = TrainSet.reshape(len(self.Packets), 20, 256, 1)
-        print (2, TrainSet.shape, TrainLabels.shape)
         return TrainSet, TrainLabels
 
     def LoadAllCsvs (self):
@@ -103,9 +109,9 @@ class SlTcs():
     def Level1Classify (self):
         self.LoadAllCsvs ()
         TrainSet, TrainLabels = self.Reshape ()
-        
-        CnnModel = CnnClf (self.LCtl.GetLabelNum ())
+         
         if os.path.exists (CNN_MODEL):
+            CnnModel = CnnClf (self.LCtl.GetLabelNum ())
             CnnModel.LoadModel ()    
             PredLabels = CnnModel.Predict (TrainSet)
             LabelLen = len (PredLabels)
@@ -114,11 +120,13 @@ class SlTcs():
                     print ("Label update: ", TrainLabels[Index], " -> ", PredLabels[Index])
                     TrainLabels[Index] = PredLabels[Index]
 
+        CnnModel = CnnClf (self.LCtl.GetLabelNum ())
         CnnModel.Train (TrainSet, TrainLabels, ModelPath=CNN_MODEL)
         
     def Level2Classify (self):
         LC = LshCluster (self.Flows)
-        Visited = {}
+        Visited  = {}
+        Similars = []
         FlowNum = len (self.Flows)
         for Index in range (FlowNum):
             if Visited.get (Index) != None:
@@ -127,25 +135,34 @@ class SlTcs():
             if Index == 511:
                 continue
             
-            Similars = LC.QuerySimilars (Index)
+            Sim = LC.QuerySimilars (Index)
             Visited [Index] = 1
-            for s in Similars:
+            for s in Sim:
                 Visited [s] = 1
-            Similars.append (Index)
-            print (Index, " <Similars> ", len (Similars))
+            Sim.append (Index)
+            Similars.append (Sim)
+            #print (Index, " <Similars> ", len (Sim))
+        return Similars
 
+    def CharExtract (self, Similars):
+        CE = ChExtract ()
+        CE.CharExtract (self.Flows, self.Packets, Similars)
     
     def Start(self):
         Num = 0
         # loop to load trainning data and train
         while (True):
+            # 1-level flow clustering
+            print ("=> Level 1 classifier..")
             self.Level1Classify ()
 
             # 2-level flow clustering
-            self.Level2Classify ()
+            print ("=> Level 2 classifier..")
+            Similars = self.Level2Classify ()
 
             # feature extraction and update labels
-
+            print ("=> Feature extraction and update labels..")
+            self.CharExtract (Similars)
             break
             
        

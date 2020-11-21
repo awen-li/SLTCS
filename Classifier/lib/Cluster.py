@@ -1,4 +1,10 @@
 #!/usr/bin/python
+##########################################################################
+# Author: Wen Li
+# Date:   11/20/2020
+# Description: flow clustering
+##########################################################################
+
 import os
 import pandas as pd
 import csv
@@ -6,7 +12,7 @@ from snapy import MinHash, LSH
 
 
 class LshCluster():
-    def __init__(self, Content, nGram=3, PrenutNum=16, BandNum=8, MinJaccard=0.1):
+    def __init__(self, Content, nGram=3, PrenutNum=16, BandNum=8, MinJaccard=0.2):
         self.nGram      = nGram
         self.BandNum    = BandNum
         self.PrenutNum  = PrenutNum
