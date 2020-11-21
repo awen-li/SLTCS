@@ -5,13 +5,15 @@ import pandas as pd
 import csv
 from lib.CnnClf import CnnClf
 from lib.LabelCtrl import LabelCtrl
-from lib.Cluster import Cluster
+from lib.Cluster import LshCluster
 
 CNN_MODEL = "result/CnnModel"
 
 class SlTcs():
     def __init__(self):
         self.LCtl = LabelCtrl ()
+        self.Flow2Label = {}
+        self.LoadFlow2Labels ()
 
     def LoadPackets (self, FileName):
         RawData = pd.read_csv(FileName, header=0)
@@ -28,26 +30,24 @@ class SlTcs():
 
     def UpdateFlows (self, Flows):
         for flow in Flows:
-            self.Flows.append (Flows)
+            self.Flows.append (flow)
         return
 
-    def LoadLabels (self, LabelFile):
-        if not os.path.exists (LabelFile):
+    def LoadFlow2Labels (self, File = "data/flow2label.csv"):
+        if not os.path.exists (File):
             return None
-        RawData = pd.read_csv(LabelFile, header=0)
-        Data = RawData.values
+        DF = pd.read_csv(File, header=0)
+        for Index, Row in DF.iterrows():
+            self.Flow2Label[Row['flow']] = Row['label']
+        return
 
-        Labels = Data[0::, 2]
-        return Labels
-
-    def UpdateLabels (self, CsvFile, Apps):
-        LabelFile = os.path.splitext(CsvFile)[0] + "-label.csv"
-        Labels = self.LoadLabels (LabelFile)
-
+    def UpdateLabels (self, Flows, Apps):
         Index = 0
         for app in Apps:
-            if Labels is not None:
-                Label = Labels[Index]
+            flow = Flows [Index]
+            flowLabel = self.Flow2Label.get (flow)
+            if flowLabel is not None:
+                Label = flowLabel
                 self.LCtl.InsertLabel (app, Label)
             else: 
                 Label = self.LCtl.AddLabel (app)
@@ -95,7 +95,7 @@ class SlTcs():
                 CsvFile = os.path.join(Path, csv)
                 Flows, Apps, Packets = self.LoadPackets (CsvFile)
 
-                self.UpdateLabels (CsvFile, Apps)
+                self.UpdateLabels (Flows, Apps)
                 self.UpdateFlows (Flows)
                 self.UpdatePackets (Packets)
         self.LCtl.WriteLabels ()
@@ -107,11 +107,34 @@ class SlTcs():
         CnnModel = CnnClf (self.LCtl.GetLabelNum ())
         if os.path.exists (CNN_MODEL):
             CnnModel.LoadModel ()    
-            TrainLabels = CnnModel.Predict (TrainSet)
-            print (TrainLabels)
+            PredLabels = CnnModel.Predict (TrainSet)
+            LabelLen = len (PredLabels)
+            for Index in range (LabelLen):
+                if self.LCtl.LabelId2Type (PredLabels[Index]) > self.LCtl.LabelId2Type (TrainLabels[Index]):             
+                    print ("Label update: ", TrainLabels[Index], " -> ", PredLabels[Index])
+                    TrainLabels[Index] = PredLabels[Index]
+
         CnnModel.Train (TrainSet, TrainLabels, ModelPath=CNN_MODEL)
         
+    def Level2Classify (self):
+        LC = LshCluster (self.Flows)
+        Visited = {}
+        FlowNum = len (self.Flows)
+        for Index in range (FlowNum):
+            if Visited.get (Index) != None:
+                continue
 
+            if Index == 511:
+                continue
+            
+            Similars = LC.QuerySimilars (Index)
+            Visited [Index] = 1
+            for s in Similars:
+                Visited [s] = 1
+            Similars.append (Index)
+            print (Index, " <Similars> ", len (Similars))
+
+    
     def Start(self):
         Num = 0
         # loop to load trainning data and train
@@ -119,7 +142,7 @@ class SlTcs():
             self.Level1Classify ()
 
             # 2-level flow clustering
-
+            self.Level2Classify ()
 
             # feature extraction and update labels
 
