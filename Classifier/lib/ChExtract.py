@@ -86,6 +86,8 @@ class ChExtract():
             
     def LdaProc (self, Documents):
         Documents = self.CleanDoc (Documents)
+        if len (Documents) == 0:
+            return None
         Dictionary = corpora.Dictionary(Documents)
         Corpus = [Dictionary.doc2bow(words) for words in Documents]
         Lda = models.ldamodel.LdaModel(corpus=Corpus, id2word=Dictionary, num_topics=1)  

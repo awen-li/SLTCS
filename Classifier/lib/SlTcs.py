@@ -6,9 +6,10 @@
 ##########################################################################
 
 import os
+import csv
+import time
 import numpy as np
 import pandas as pd
-import csv
 from lib.CnnClf import CnnClf
 from lib.LabelCtrl import LabelCtrl
 from lib.Cluster import LshCluster
@@ -19,10 +20,11 @@ CNN_MODEL = "result/CnnModel"
 FLOWLABEL = "data/flow2label.csv"
 
 class SlTcs():
-    def __init__(self):
+    def __init__(self, IsOffline=False):
         self.LCtl = LabelCtrl ()
         self.Flow2Label = {}
         self.LoadFlow2Labels ()
+        self.IsOffline = IsOffline
 
     def LoadPackets (self, FileName):
         RawData = pd.read_csv(FileName, header=0)
@@ -58,8 +60,7 @@ class SlTcs():
             if flowLabel is not None:
                 Label = flowLabel
             else: 
-                Label = self.LCtl.AddLabel (app)
-                
+                Label = self.LCtl.AddLabel (app) 
             self.Labels.append (Label)
             Index += 1
         return
@@ -152,6 +153,9 @@ class SlTcs():
         Num = 0
         # loop to load trainning data and train
         while (True):
+            if self.IsOffline == False:
+                time.sleep(600)
+            
             # 1-level flow clustering
             print ("=> Level 1 classifier..")
             self.Level1Classify ()
@@ -163,7 +167,9 @@ class SlTcs():
             # feature extraction and update labels
             print ("=> Feature extraction and update labels..")
             self.CharExtract (Similars)
-            break
+
+            if self.IsOffline == True:
+                break
             
        
 

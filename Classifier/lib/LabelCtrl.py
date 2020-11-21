@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import csv
 
-LABEL_FILE = "labelctrl.csv"
+LABEL_FILE = "data/labelctrl.csv"
 
 LV1_LABEL  = 1
 LV2_LABEL  = 2
@@ -68,6 +68,7 @@ class LabelCtrl():
             if Attr.Id != Id:
                 continue
             return Attr.Type
+        print (Id, " did not find the label in database..")
         assert (0)
         return -1
 
