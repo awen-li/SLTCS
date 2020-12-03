@@ -90,7 +90,7 @@ class ChExtract():
             return None
         Dictionary = corpora.Dictionary(Documents)
         Corpus = [Dictionary.doc2bow(words) for words in Documents]
-        Lda = models.ldamodel.LdaModel(corpus=Corpus, id2word=Dictionary, num_topics=1)  
+        Lda = models.ldamodel.LdaModel(corpus=Corpus, id2word=Dictionary, num_topics=5)  
         Topic = Lda.print_topics(num_words=1)[0][1]
         #0.294*"baidu"
         Rate, Tp = self.RateTopic (Topic)

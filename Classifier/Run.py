@@ -1,18 +1,31 @@
 #!/usr/bin/python
-import sys
+import sys, getopt
 import os
 from lib.SlTcs import SlTcs
 
-
-def LoadData (FileName):
-    RawData = pd.read_csv("data/" + FileName, header=0)
-    Data = RawData.values
-
-    Features = Data[0::, 1::]
-    Labels   = Data[::, 0]
-    return Features, Labels
-
+def Remove (File):
+    if not os.path.exists (File):
+        return
+    os.remove (File)
+    
 def main(argv):
+    Action = ""
+    Offline = False
+    
+    try:
+        opts, args = getopt.getopt(argv,"hcf",["q="])
+    except getopt.GetoptError:
+        print ("Run.py -c <clear>")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print ("Run.py -c <clear>")
+            sys.exit()
+        elif opt in ("-c", "--clear"):
+            Action = "clear";
+        elif opt in ("-f", "--offline"):
+            Offline = True;
+    
     if (not os.path.exists("result")):
         os.makedirs("result")
 
@@ -20,7 +33,12 @@ def main(argv):
         print ("data directory does not exist!!!!")
         sys.exit(2)
 
-    SlSysten = SlTcs ()
+    if Action == "clear":
+        Remove ("data/flow2label.csv")
+        Remove ("result/Appcharacteristic.csv")
+        Remove ("result/CnnModel")
+
+    SlSysten = SlTcs (Offline)
     SlSysten.Start ();
 
 

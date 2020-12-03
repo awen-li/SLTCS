@@ -132,9 +132,6 @@ class SlTcs():
         for Index in range (FlowNum):
             if Visited.get (Index) != None:
                 continue
-
-            if Index == 511:
-                continue
             
             Sim = LC.QuerySimilars (Index)
             Visited [Index] = 1
